@@ -46,7 +46,7 @@ export default function HandNumbers() {
         minTrackingConfidence: 0.55,
       });
       setCameraState('ready');
-      setMessage('Kamera bereit. Strecke Finger deutlich aus oder zeige eine Sondergeste.');
+      setMessage('Kamera bereit. Zeige eine Zahl mit einer oder zwei Händen.');
     } catch (error) {
       console.error(error);
       setCameraState('error');
@@ -113,7 +113,6 @@ export default function HandNumbers() {
   }, []);
 
   const shown = displayValue === 'heart' ? '❤️' : displayValue === 'stop' ? '🛑' : displayValue ?? '–';
-  const label = displayValue === 'heart' ? 'Herz erkannt' : displayValue === 'stop' ? 'Stopp erkannt' : 'Erkannte Zahl';
 
   return (
     <div className="number-app">
@@ -136,10 +135,9 @@ export default function HandNumbers() {
         </section>
 
         <section className="number-display" aria-live="polite">
-          <span className="number-label">{label}</span>
+          <span className="number-label">Ergebnis</span>
           <strong className={typeof shown === 'string' && shown.length > 1 ? 'gesture-symbol' : ''}>{shown}</strong>
           <span className="hand-status">{hands === 0 ? 'Keine Hand erkannt' : hands === 1 ? 'Eine Hand erkannt' : 'Zwei Hände erkannt'}</span>
-          <p>Ausgestreckte Finger ergeben Zahlen von 0 bis 10. Zwei Hände als Herz zeigen ❤️, ein ausgestreckter Mittelfinger zeigt 🛑.</p>
         </section>
       </main>
 
