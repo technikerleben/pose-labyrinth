@@ -15,6 +15,7 @@
 }
 .variant-switch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 960px; }
 .variant-switch.four { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 1180px; }
+.variant-switch.five { grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 1400px; }
 .variant-switch button { background: transparent; color: #52636f; }
 .variant-switch button.active { background: white; color: #20303c; box-shadow: 0 4px 16px #20303c18; }
 .number-app { min-height: calc(100vh - 72px); max-width: 1400px; margin: auto; padding: 18px max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
@@ -31,6 +32,9 @@
 .raised-app .room-view video, .raised-app .room-view canvas { transform: none; }
 .raised-display strong { font-size: clamp(11rem, 26vw, 22rem); }
 .privacy-note { margin-top: 1rem; padding: 1rem 1.2rem; border-radius: 16px; background: #f0f6ef; color: #334b3c; border-left: 5px solid #5f8b55; }
+@media (max-width: 1180px) {
+  .variant-switch.five { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 920px; }
+}
 @media (max-width: 1000px) {
   .variant-switch.four { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; }
   .raised-main { grid-template-columns: minmax(0, 1fr) minmax(240px, .45fr); }
@@ -40,10 +44,11 @@
   .number-display strong { font-size: clamp(8rem, 24vw, 15rem); }
   .number-display strong.gesture-symbol { font-size: clamp(6rem, 18vw, 11rem); }
   .raised-display strong { font-size: clamp(8rem, 22vw, 14rem); }
+  .variant-switch.five { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 680px; }
 }
 @media (max-width: 680px) {
   .variant-switch { margin-inline: 10px; }
-  .variant-switch.three, .variant-switch.four { grid-template-columns: 1fr; }
+  .variant-switch.three, .variant-switch.four, .variant-switch.five { grid-template-columns: 1fr; }
   .variant-switch button { font-size: .88rem; padding-inline: .5rem; }
   .number-app { padding: 10px; }
   .number-main, .raised-main { grid-template-columns: 1fr; }
