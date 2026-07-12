@@ -55,7 +55,7 @@ export default function FaceExpressions() {
         if (categories.length) {
           const scores = Object.fromEntries(categories.map((c) => [c.categoryName, c.score]));
           const current = classify(scores);
-          historyRef.current = [...historyRef.current.slice(-5), current.emoji];
+          historyRef.current = [...historyRef.current.slice(-6), current.emoji];
           const count = historyRef.current.filter((value) => value === current.emoji).length;
           if (count >= 3) setExpression(current);
         } else {
@@ -98,13 +98,39 @@ export default function FaceExpressions() {
 }
 
 function classify(s: Record<string, number>): Expression {
-  const smile = Math.max(s.mouthSmileLeft ?? 0, s.mouthSmileRight ?? 0);
-  const surprise = (s.jawOpen ?? 0) + (s.eyeWideLeft ?? 0) + (s.eyeWideRight ?? 0);
-  const anger = (s.browDownLeft ?? 0) + (s.browDownRight ?? 0) + (s.mouthPressLeft ?? 0) + (s.mouthPressRight ?? 0);
-  const sadness = (s.mouthFrownLeft ?? 0) + (s.mouthFrownRight ?? 0) + (s.browInnerUp ?? 0);
-  if (smile > 0.55) return { emoji: '🙂', label: 'Fröhlich' };
-  if (surprise > 1.15 && (s.jawOpen ?? 0) > 0.35) return { emoji: '😮', label: 'Überrascht' };
-  if (anger > 1.25) return { emoji: '😠', label: 'Ärgerlich' };
-  if (sadness > 0.9) return { emoji: '😢', label: 'Traurig' };
+  const average = (...values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+
+  const smile = average(s.mouthSmileLeft ?? 0, s.mouthSmileRight ?? 0);
+  const jawOpen = s.jawOpen ?? 0;
+  const eyeWide = average(s.eyeWideLeft ?? 0, s.eyeWideRight ?? 0);
+  const browUp = s.browInnerUp ?? 0;
+  const browDown = average(s.browDownLeft ?? 0, s.browDownRight ?? 0);
+  const mouthPress = average(s.mouthPressLeft ?? 0, s.mouthPressRight ?? 0);
+  const mouthFrown = average(s.mouthFrownLeft ?? 0, s.mouthFrownRight ?? 0);
+  const mouthLowerDown = average(s.mouthLowerDownLeft ?? 0, s.mouthLowerDownRight ?? 0);
+  const eyeSquint = average(s.eyeSquintLeft ?? 0, s.eyeSquintRight ?? 0);
+
+  const surpriseScore = jawOpen * 0.65 + eyeWide * 0.25 + browUp * 0.1;
+  const sadnessScore = mouthFrown * 0.55 + browUp * 0.25 + mouthLowerDown * 0.2;
+  const angerScore = browDown * 0.6 + mouthPress * 0.25 + eyeSquint * 0.15;
+
+  // Staunen zuerst prüfen: Ein offener Mund kann sonst fälschlich als Lächeln wirken.
+  if (jawOpen > 0.42 && (eyeWide > 0.12 || browUp > 0.18) && surpriseScore > 0.34) {
+    return { emoji: '😮', label: 'Überrascht' };
+  }
+
+  if (smile > 0.42 && mouthFrown < 0.22) {
+    return { emoji: '🙂', label: 'Fröhlich' };
+  }
+
+  if (angerScore > 0.42 && browDown > 0.28) {
+    return { emoji: '😠', label: 'Ärgerlich' };
+  }
+
+  // Traurigkeit wird vor allem über heruntergezogene Mundwinkel und angehobene innere Brauen erkannt.
+  if ((mouthFrown > 0.28 && browUp > 0.12) || sadnessScore > 0.34) {
+    return { emoji: '😢', label: 'Traurig' };
+  }
+
   return NEUTRAL;
 }
