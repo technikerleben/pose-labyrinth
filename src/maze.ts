@@ -3,7 +3,7 @@ import type { Action } from './types';
 export type Point = { x: number; y: number };
 export type Maze = string[];
 
-export function generateMaze(width = 21, height = 15): Maze {
+export function generateMaze(width = 17, height = 11): Maze {
   const w = width % 2 === 0 ? width + 1 : width;
   const h = height % 2 === 0 ? height + 1 : height;
   const grid = Array.from({ length: h }, () => Array(w).fill('#'));
