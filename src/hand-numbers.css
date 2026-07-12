@@ -13,92 +13,26 @@
   box-shadow: 0 8px 24px #20303c18;
   backdrop-filter: blur(10px);
 }
-
-.variant-switch button {
-  background: transparent;
-  color: #52636f;
-}
-
-.variant-switch button.active {
-  background: white;
-  color: #20303c;
-  box-shadow: 0 4px 16px #20303c18;
-}
-
-.number-app {
-  min-height: calc(100vh - 72px);
-  max-width: 1400px;
-  margin: auto;
-  padding: 18px max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
-}
-
-.number-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
-  gap: 1.25rem;
-  align-items: stretch;
-  margin-top: 1.25rem;
-}
-
-.number-display {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: clamp(1.5rem, 4vw, 3rem);
-  border-radius: 24px;
-  background: #243746;
-  color: white;
-  box-shadow: 0 12px 40px #20303c20;
-}
-
-.number-label {
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  font-size: clamp(.85rem, 1.5vw, 1.1rem);
-  font-weight: 850;
-  opacity: .78;
-}
-
-.number-display strong {
-  display: block;
-  font-size: clamp(10rem, 32vw, 25rem);
-  line-height: .82;
-  margin: .3rem 0 .8rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.number-display strong.gesture-symbol {
-  font-size: clamp(7rem, 20vw, 15rem);
-  line-height: 1;
-}
-
-.hand-status {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  padding: .55rem 1rem;
-  border-radius: 999px;
-  background: #ffffff18;
-  font-weight: 800;
-}
-
-.number-display p {
-  max-width: 34ch;
-  margin: 1rem 0 0;
-  opacity: .78;
-}
-
+.variant-switch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 960px; }
+.variant-switch button { background: transparent; color: #52636f; }
+.variant-switch button.active { background: white; color: #20303c; box-shadow: 0 4px 16px #20303c18; }
+.number-app { min-height: calc(100vh - 72px); max-width: 1400px; margin: auto; padding: 18px max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+.number-main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 1.25rem; align-items: stretch; margin-top: 1.25rem; }
+.number-display { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: clamp(1.5rem, 4vw, 3rem); border-radius: 24px; background: #243746; color: white; box-shadow: 0 12px 40px #20303c20; }
+.number-label { text-transform: uppercase; letter-spacing: .12em; font-size: clamp(.85rem, 1.5vw, 1.1rem); font-weight: 850; opacity: .78; }
+.number-display strong { display: block; font-size: clamp(10rem, 32vw, 25rem); line-height: .82; margin: .3rem 0 .8rem; font-variant-numeric: tabular-nums; }
+.number-display strong.gesture-symbol { font-size: clamp(7rem, 20vw, 15rem); line-height: 1; }
+.hand-status { display: inline-flex; align-items: center; min-height: 42px; padding: .55rem 1rem; border-radius: 999px; background: #ffffff18; font-weight: 800; }
+.number-display p { max-width: 34ch; margin: 1rem 0 0; opacity: .78; }
+.face-app .camera-wrap video { transform: scaleX(-1); }
 @media (max-width: 850px) {
   .number-main { grid-template-columns: minmax(0, 1fr) minmax(220px, .55fr); }
   .number-display strong { font-size: clamp(8rem, 24vw, 15rem); }
   .number-display strong.gesture-symbol { font-size: clamp(6rem, 18vw, 11rem); }
 }
-
 @media (max-width: 680px) {
   .variant-switch { margin-inline: 10px; }
+  .variant-switch.three { grid-template-columns: 1fr; }
   .variant-switch button { font-size: .88rem; padding-inline: .5rem; }
   .number-app { padding: 10px; }
   .number-main { grid-template-columns: 1fr; }
