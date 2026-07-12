@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
-import { countExtendedFingers } from './handCounting';
+import { countExtendedFingers, isHeartGesture, isMiddleFingerGesture } from './handCounting';
 
 type CameraState = 'off' | 'loading' | 'ready' | 'error';
+type DisplayValue = number | 'heart' | 'stop' | null;
 
 export default function HandNumbers() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -11,10 +12,10 @@ export default function HandNumbers() {
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<number | null>(null);
   const lastVideoTime = useRef(-1);
-  const historyRef = useRef<number[]>([]);
+  const historyRef = useRef<Array<number | 'heart' | 'stop'>>([]);
 
   const [cameraState, setCameraState] = useState<CameraState>('off');
-  const [number, setNumber] = useState<number | null>(null);
+  const [displayValue, setDisplayValue] = useState<DisplayValue>(null);
   const [hands, setHands] = useState(0);
   const [message, setMessage] = useState('Starte die Kamera und halte eine oder zwei Hände gut sichtbar ins Bild.');
 
@@ -45,7 +46,7 @@ export default function HandNumbers() {
         minTrackingConfidence: 0.55,
       });
       setCameraState('ready');
-      setMessage('Kamera bereit. Strecke Finger deutlich aus und halte die Hände kurz ruhig.');
+      setMessage('Kamera bereit. Strecke Finger deutlich aus oder zeige eine Sondergeste.');
     } catch (error) {
       console.error(error);
       setCameraState('error');
@@ -79,15 +80,23 @@ export default function HandNumbers() {
         const detectedHands = result.landmarks.length;
         setHands(detectedHands);
         if (detectedHands > 0) {
-          const current = result.landmarks.reduce((sum, hand) => sum + countExtendedFingers(hand), 0);
+          let current: number | 'heart' | 'stop';
+          if (isHeartGesture(result.landmarks)) {
+            current = 'heart';
+          } else if (result.landmarks.some((hand) => isMiddleFingerGesture(hand))) {
+            current = 'stop';
+          } else {
+            current = result.landmarks.reduce((sum, hand) => sum + countExtendedFingers(hand), 0);
+          }
+
           historyRef.current = [...historyRef.current.slice(-6), current];
-          const counts = new Map<number, number>();
+          const counts = new Map<number | 'heart' | 'stop', number>();
           for (const value of historyRef.current) counts.set(value, (counts.get(value) ?? 0) + 1);
           const stable = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
-          if (stable && stable[1] >= 3) setNumber(stable[0]);
+          if (stable && stable[1] >= 3) setDisplayValue(stable[0]);
         } else {
           historyRef.current = [];
-          setNumber(null);
+          setDisplayValue(null);
         }
       }
       frameRef.current = requestAnimationFrame(loop);
@@ -102,6 +111,9 @@ export default function HandNumbers() {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     landmarkerRef.current?.close();
   }, []);
+
+  const shown = displayValue === 'heart' ? '❤️' : displayValue === 'stop' ? '🛑' : displayValue ?? '–';
+  const label = displayValue === 'heart' ? 'Herz erkannt' : displayValue === 'stop' ? 'Stopp erkannt' : 'Erkannte Zahl';
 
   return (
     <div className="number-app">
@@ -124,10 +136,10 @@ export default function HandNumbers() {
         </section>
 
         <section className="number-display" aria-live="polite">
-          <span className="number-label">Erkannte Zahl</span>
-          <strong>{number ?? '–'}</strong>
+          <span className="number-label">{label}</span>
+          <strong className={typeof shown === 'string' && shown.length > 1 ? 'gesture-symbol' : ''}>{shown}</strong>
           <span className="hand-status">{hands === 0 ? 'Keine Hand erkannt' : hands === 1 ? 'Eine Hand erkannt' : 'Zwei Hände erkannt'}</span>
-          <p>Gezählt werden ausgestreckte Finger. Mit zwei Händen sind Zahlen von 0 bis 10 möglich.</p>
+          <p>Ausgestreckte Finger ergeben Zahlen von 0 bis 10. Zwei Hände als Herz zeigen ❤️, ein ausgestreckter Mittelfinger zeigt 🛑.</p>
         </section>
       </main>
 
