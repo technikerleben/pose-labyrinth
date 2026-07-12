@@ -35,7 +35,7 @@ export default function FaceExpressions() {
         minFaceDetectionConfidence: 0.55, minFacePresenceConfidence: 0.55, minTrackingConfidence: 0.55,
       });
       setCameraState('ready');
-      setMessage('Gesicht erkannt. Probiere Lächeln, Staunen, Ärger oder Traurigkeit.');
+      setMessage('Gesicht erkannt. Probiere Lächeln, herzliches Lachen, Staunen oder Ärger.');
     } catch (error) {
       console.error(error);
       setCameraState('error');
@@ -90,7 +90,7 @@ export default function FaceExpressions() {
         <span className="number-label">Erkannter Ausdruck</span>
         <strong className="gesture-symbol">{expression.emoji}</strong>
         <span className="hand-status">{expression.label}</span>
-        <p>Die App unterscheidet fünf einfache Ausdrücke: 🙂 😐 😮 😠 😢. Sie erkennt keine Person und speichert keine Gesichtsbilder.</p>
+        <p>Die App unterscheidet fünf einfache Ausdrücke: 🙂 😐 😃 😮 😠. Sie erkennt keine Person und speichert keine Gesichtsbilder.</p>
       </section>
     </main>
     <footer>Die Auswertung findet ausschließlich live im Browser statt.</footer>
@@ -106,30 +106,25 @@ function classify(s: Record<string, number>): Expression {
   const browUp = s.browInnerUp ?? 0;
   const browDown = average(s.browDownLeft ?? 0, s.browDownRight ?? 0);
   const mouthPress = average(s.mouthPressLeft ?? 0, s.mouthPressRight ?? 0);
-  const mouthFrown = average(s.mouthFrownLeft ?? 0, s.mouthFrownRight ?? 0);
-  const mouthLowerDown = average(s.mouthLowerDownLeft ?? 0, s.mouthLowerDownRight ?? 0);
   const eyeSquint = average(s.eyeSquintLeft ?? 0, s.eyeSquintRight ?? 0);
 
   const surpriseScore = jawOpen * 0.65 + eyeWide * 0.25 + browUp * 0.1;
-  const sadnessScore = mouthFrown * 0.55 + browUp * 0.25 + mouthLowerDown * 0.2;
   const angerScore = browDown * 0.6 + mouthPress * 0.25 + eyeSquint * 0.15;
 
-  // Staunen zuerst prüfen: Ein offener Mund kann sonst fälschlich als Lächeln wirken.
   if (jawOpen > 0.42 && (eyeWide > 0.12 || browUp > 0.18) && surpriseScore > 0.34) {
     return { emoji: '😮', label: 'Überrascht' };
   }
 
-  if (smile > 0.42 && mouthFrown < 0.22) {
+  if (smile > 0.48 && jawOpen > 0.22) {
+    return { emoji: '😃', label: 'Herzlich lachend' };
+  }
+
+  if (smile > 0.42) {
     return { emoji: '🙂', label: 'Fröhlich' };
   }
 
   if (angerScore > 0.42 && browDown > 0.28) {
     return { emoji: '😠', label: 'Ärgerlich' };
-  }
-
-  // Traurigkeit wird vor allem über heruntergezogene Mundwinkel und angehobene innere Brauen erkannt.
-  if ((mouthFrown > 0.28 && browUp > 0.12) || sadnessScore > 0.34) {
-    return { emoji: '😢', label: 'Traurig' };
   }
 
   return NEUTRAL;
