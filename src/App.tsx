@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DrawingUtils, FilesetResolver, PoseLandmarker, type NormalizedLandmark } from '@mediapipe/tasks-vision';
 import { normalizePose, predictKnn } from './ml';
-import { findCell, MAZE, move, type Point } from './maze';
+import { findCell, generateMaze, move, type Maze, type Point } from './maze';
 import type { Action, PoseClass, Prediction } from './types';
 
 const DEFAULT_CLASSES: PoseClass[] = [
@@ -33,23 +33,20 @@ export default function App() {
   const [cameraState, setCameraState] = useState<'off' | 'loading' | 'ready' | 'error'>('off');
   const [message, setMessage] = useState('Starte die Kamera, um Trainingsbeispiele aufzunehmen.');
   const [prediction, setPrediction] = useState<Prediction | null>(null);
-  const [player, setPlayer] = useState<Point>(() => findCell('S'));
-  const goal = useMemo(() => findCell('Z'), []);
+  const [maze, setMaze] = useState<Maze>(() => generateMaze());
+  const [player, setPlayer] = useState<Point>(() => findCell(maze, 'S'));
+  const goal = useMemo(() => findCell(maze, 'Z'), [maze]);
 
   useEffect(() => { localStorage.setItem(STORE_KEY, JSON.stringify(classes)); }, [classes]);
 
   const startCamera = useCallback(async () => {
     setCameraState('loading');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 720 } }, audio: false,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 720 } }, audio: false });
       if (!videoRef.current) return;
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm',
-      );
+      const vision = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm');
       landmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
@@ -63,7 +60,7 @@ export default function App() {
     } catch (error) {
       console.error(error);
       setCameraState('error');
-      setMessage('Die Kamera konnte nicht gestartet werden. Prüfe die Kamerafreigabe und öffne die Seite über HTTPS.');
+      setMessage('Die Kamera konnte nicht gestartet werden. Prüfe Kamerafreigabe und HTTPS.');
     }
   }, []);
 
@@ -99,7 +96,7 @@ export default function App() {
             if (mode === 'play' && stable && stable.confidence >= 0.65 && stable.action !== 'neutral') {
               const now = performance.now();
               if (now - lastMoveAt.current > 650) {
-                setPlayer((old) => move(old, stable.action));
+                setPlayer((old) => move(maze, old, stable.action));
                 lastMoveAt.current = now;
               }
             }
@@ -110,17 +107,17 @@ export default function App() {
     };
     frameRef.current = requestAnimationFrame(loop);
     return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
-  }, [cameraState, classes, mode]);
+  }, [cameraState, classes, mode, maze]);
 
   useEffect(() => {
-    if (player.x === goal.x && player.y === goal.y) setMessage('Ziel erreicht! Das Modell hat das Labyrinth geschafft.');
+    if (player.x === goal.x && player.y === goal.y) setMessage('Ziel erreicht! Der Otter hat das Labyrinth geschafft.');
   }, [goal, player]);
 
   function recordSample() {
     const vector = latestVector.current;
     if (!vector) { setMessage('Noch keine sichere Körperpose erkannt. Zeige deinen Oberkörper vollständig.'); return; }
     setClasses((old) => old.map((c) => c.id === selectedId ? { ...c, samples: [...c.samples, vector] } : c));
-    setMessage('Beispiel gespeichert. Verändere die Pose oder deinen Abstand leicht und nimm ein weiteres auf.');
+    setMessage('Beispiel gespeichert. Verändere Pose oder Abstand leicht und nimm ein weiteres auf.');
   }
 
   function clearSelected() {
@@ -134,69 +131,66 @@ export default function App() {
     URL.revokeObjectURL(url);
   }
 
+  function newMaze() {
+    const next = generateMaze();
+    setMaze(next);
+    setPlayer(findCell(next, 'S'));
+    setMessage('Ein neues zufälliges Labyrinth wurde erstellt.');
+  }
+
   const enoughData = classes.every((c) => c.samples.length >= 5);
 
-  return (
-    <div className="app">
-      <header>
-        <div><span className="eyebrow">KI-Werkstatt</span><h1>Pose-Labyrinth</h1></div>
-        <button className="secondary" onClick={exportProject}>Projekt exportieren</button>
-      </header>
+  return <div className={`app ${mode === 'play' ? 'play-mode' : ''}`}>
+    <header>
+      <div><span className="eyebrow">KI-Werkstatt</span><h1>Pose-Labyrinth</h1></div>
+      <button className="secondary" onClick={exportProject}>Projekt exportieren</button>
+    </header>
 
-      <nav aria-label="Arbeitsbereiche">
-        {(['train', 'test', 'play'] as Mode[]).map((item, index) => (
-          <button key={item} className={mode === item ? 'active' : ''} disabled={item !== 'train' && !enoughData}
-            onClick={() => { setMode(item); historyRef.current = []; setPrediction(null); }}>
-            {index + 1}. {item === 'train' ? 'Trainieren' : item === 'test' ? 'Testen' : 'Spielen'}
-          </button>
-        ))}
-      </nav>
+    <nav aria-label="Arbeitsbereiche">
+      {(['train', 'test', 'play'] as Mode[]).map((item, index) => <button key={item} className={mode === item ? 'active' : ''} disabled={item !== 'train' && !enoughData}
+        onClick={() => { setMode(item); historyRef.current = []; setPrediction(null); }}>
+        {index + 1}. {item === 'train' ? 'Trainieren' : item === 'test' ? 'Testen' : 'Spielen'}
+      </button>)}
+    </nav>
 
-      <main>
-        <section className="camera-card">
-          <div className="camera-wrap">
-            <video ref={videoRef} playsInline muted />
-            <canvas ref={canvasRef} />
-            {cameraState !== 'ready' && <div className="camera-placeholder"><span>◉</span><p>Kamera ist noch aus</p></div>}
-          </div>
-          {cameraState === 'off' || cameraState === 'error' ? <button className="primary big" onClick={startCamera}>Kamera starten</button> : null}
-          <div className="status" role="status">{message}</div>
-          {mode !== 'train' && <div className="prediction"><span>Erkannt</span><strong>{prediction?.name ?? '–'}</strong><small>{prediction ? `${Math.round(prediction.confidence * 100)} %` : 'Pose kurz halten'}</small></div>}
-        </section>
+    <main>
+      <section className="camera-card">
+        <div className="camera-wrap">
+          <video ref={videoRef} playsInline muted />
+          <canvas ref={canvasRef} />
+          {cameraState !== 'ready' && <div className="camera-placeholder"><span>◉</span><p>Kamera ist noch aus</p></div>}
+        </div>
+        {(cameraState === 'off' || cameraState === 'error') && <button className="primary big" onClick={startCamera}>Kamera starten</button>}
+        <div className="status" role="status">{message}</div>
+        {mode !== 'train' && <div className="prediction"><span>Erkannt</span><strong>{prediction?.name ?? '–'}</strong><small>{prediction ? `${Math.round(prediction.confidence * 100)} %` : 'Pose kurz halten'}</small></div>}
+      </section>
 
-        {mode === 'train' && <section className="panel">
-          <h2>Trainingsklasse wählen</h2>
-          <div className="class-list">
-            {classes.map((c) => <button key={c.id} className={selectedId === c.id ? 'class active' : 'class'} onClick={() => setSelectedId(c.id)}>
-              <span>{arrow(c.action)}</span><strong>{c.name}</strong><small>{c.samples.length} Beispiele</small>
-            </button>)}
-          </div>
-          <div className="actions">
-            <button className="primary" disabled={cameraState !== 'ready'} onClick={recordSample}>Beispiel aufnehmen</button>
-            <button className="secondary" onClick={clearSelected}>Klasse leeren</button>
-          </div>
-          <p className="hint">Für den ersten Test genügen 5 Beispiele pro Klasse. Zuverlässiger wird es ab etwa 20 unterschiedlichen Beispielen.</p>
-        </section>}
+      {mode === 'train' && <section className="panel">
+        <h2>Trainingsklasse wählen</h2>
+        <div className="class-list">{classes.map((c) => <button key={c.id} className={selectedId === c.id ? 'class active' : 'class'} onClick={() => setSelectedId(c.id)}>
+          <span>{arrow(c.action)}</span><strong>{c.name}</strong><small>{c.samples.length} Beispiele</small>
+        </button>)}</div>
+        <div className="actions"><button className="primary" disabled={cameraState !== 'ready'} onClick={recordSample}>Beispiel aufnehmen</button><button className="secondary" onClick={clearSelected}>Klasse leeren</button></div>
+        <p className="hint">Für den ersten Test genügen 5 Beispiele pro Klasse. Zuverlässiger wird es ab etwa 20 unterschiedlichen Beispielen.</p>
+      </section>}
 
-        {mode === 'test' && <section className="panel test-panel">
-          <h2>Modell testen</h2>
-          <p>Zeige nacheinander jede trainierte Pose. Die Erkennung erscheint unter dem Kamerabild.</p>
-          <div className="quality-grid">{classes.map((c) => <div key={c.id}><strong>{c.name}</strong><span>{c.samples.length}</span><small>Beispiele</small></div>)}</div>
-        </section>}
+      {mode === 'test' && <section className="panel test-panel">
+        <h2>Modell testen</h2><p>Zeige nacheinander jede trainierte Pose.</p>
+        <div className="quality-grid">{classes.map((c) => <div key={c.id}><strong>{c.name}</strong><span>{c.samples.length}</span><small>Beispiele</small></div>)}</div>
+      </section>}
 
-        {mode === 'play' && <section className="panel game-panel">
-          <div className="game-title"><div><h2>Labyrinth</h2><p>Halte eine Pose kurz, um ein Feld zu gehen.</p></div><button className="secondary" onClick={() => setPlayer(findCell('S'))}>Neu starten</button></div>
-          <div className="maze" style={{ gridTemplateColumns: `repeat(${MAZE[0].length}, 1fr)` }}>
-            {MAZE.flatMap((row, y) => [...row].map((cell, x) => {
-              const isPlayer = player.x === x && player.y === y;
-              return <div key={`${x}-${y}`} className={`cell ${cell === '#' ? 'wall' : 'floor'} ${cell === 'Z' ? 'goal' : ''}`}>{isPlayer ? '●' : cell === 'Z' ? '★' : ''}</div>;
-            }))}
-          </div>
-        </section>}
-      </main>
-      <footer>Die Kamerabilder werden nur live auf diesem Gerät verarbeitet. Gespeichert werden ausschließlich Körperkoordinaten.</footer>
-    </div>
-  );
+      {mode === 'play' && <section className="panel game-panel">
+        <div className="game-title"><div><h2>Labyrinth</h2><p>Halte eine Pose kurz, um den Otter ein Feld zu bewegen.</p></div><div className="game-actions"><button className="secondary" onClick={() => setPlayer(findCell(maze, 'S'))}>Neu starten</button><button className="primary" onClick={newMaze}>Zufälliges Labyrinth</button></div></div>
+        <div className="maze" style={{ gridTemplateColumns: `repeat(${maze[0].length}, 1fr)` }}>
+          {maze.flatMap((row, y) => [...row].map((cell, x) => {
+            const isPlayer = player.x === x && player.y === y;
+            return <div key={`${x}-${y}`} className={`cell ${cell === '#' ? 'wall' : 'floor'} ${cell === 'Z' ? 'goal' : ''}`}>{isPlayer ? '🦦' : cell === 'Z' ? '★' : ''}</div>;
+          }))}
+        </div>
+      </section>}
+    </main>
+    <footer>Die Kamerabilder werden nur live auf diesem Gerät verarbeitet. Gespeichert werden ausschließlich Körperkoordinaten.</footer>
+  </div>;
 }
 
 function arrow(action: Action) {
