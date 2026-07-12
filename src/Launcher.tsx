@@ -1,10 +1,13 @@
 import App from './App';
+import FaceExpressions from './FaceExpressions';
 import HandNumbers from './HandNumbers';
 
-type Variant = 'pose' | 'numbers';
+type Variant = 'pose' | 'numbers' | 'face';
 
 function currentVariant(): Variant {
-  return window.location.hash === '#numbers' ? 'numbers' : 'pose';
+  if (window.location.hash === '#numbers') return 'numbers';
+  if (window.location.hash === '#face') return 'face';
+  return 'pose';
 }
 
 export default function Launcher() {
@@ -12,21 +15,18 @@ export default function Launcher() {
 
   function switchVariant(next: Variant) {
     if (next === variant) return;
-    window.location.hash = next === 'numbers' ? 'numbers' : '';
+    window.location.hash = next === 'pose' ? '' : next;
     window.location.reload();
   }
 
   return (
     <>
-      <div className="variant-switch" role="navigation" aria-label="App-Variante wählen">
-        <button className={variant === 'pose' ? 'active' : ''} onClick={() => switchVariant('pose')}>
-          Körperposen &amp; Labyrinth
-        </button>
-        <button className={variant === 'numbers' ? 'active' : ''} onClick={() => switchVariant('numbers')}>
-          Zahlen mit Händen
-        </button>
+      <div className="variant-switch three" role="navigation" aria-label="App-Variante wählen">
+        <button className={variant === 'pose' ? 'active' : ''} onClick={() => switchVariant('pose')}>Körperposen &amp; Labyrinth</button>
+        <button className={variant === 'numbers' ? 'active' : ''} onClick={() => switchVariant('numbers')}>Zahlen mit Händen</button>
+        <button className={variant === 'face' ? 'active' : ''} onClick={() => switchVariant('face')}>Gesichtsausdrücke</button>
       </div>
-      {variant === 'pose' ? <App /> : <HandNumbers />}
+      {variant === 'pose' ? <App /> : variant === 'numbers' ? <HandNumbers /> : <FaceExpressions />}
     </>
   );
 }
