@@ -11,6 +11,12 @@ function angle(a: NormalizedLandmark, b: NormalizedLandmark, c: NormalizedLandma
   return Math.acos(Math.max(-1, Math.min(1, dot / lengths))) * 180 / Math.PI;
 }
 
+function fingerExtended(hand: NormalizedLandmark[], mcp: number, pip: number, tip: number): boolean {
+  const straight = angle(hand[mcp], hand[pip], hand[tip]) > 155;
+  const tipFartherFromWrist = distance(hand[tip], hand[0]) > distance(hand[pip], hand[0]) * 1.08;
+  return straight && tipFartherFromWrist;
+}
+
 export function countExtendedFingers(hand: NormalizedLandmark[]): number {
   if (hand.length < 21) return 0;
 
@@ -23,9 +29,7 @@ export function countExtendedFingers(hand: NormalizedLandmark[]): number {
   ];
 
   for (const [mcp, pip, tip] of fingers) {
-    const straight = angle(hand[mcp], hand[pip], hand[tip]) > 155;
-    const tipFartherFromWrist = distance(hand[tip], hand[0]) > distance(hand[pip], hand[0]) * 1.08;
-    if (straight && tipFartherFromWrist) count += 1;
+    if (fingerExtended(hand, mcp, pip, tip)) count += 1;
   }
 
   const thumbStraight = angle(hand[2], hand[3], hand[4]) > 145;
@@ -33,6 +37,32 @@ export function countExtendedFingers(hand: NormalizedLandmark[]): number {
   if (thumbStraight && thumbOpen) count += 1;
 
   return count;
+}
+
+export function isMiddleFingerGesture(hand: NormalizedLandmark[]): boolean {
+  if (hand.length < 21) return false;
+  const index = fingerExtended(hand, 5, 6, 8);
+  const middle = fingerExtended(hand, 9, 10, 12);
+  const ring = fingerExtended(hand, 13, 14, 16);
+  const pinky = fingerExtended(hand, 17, 18, 20);
+  return middle && !index && !ring && !pinky;
+}
+
+export function isHeartGesture(hands: NormalizedLandmark[][]): boolean {
+  if (hands.length !== 2) return false;
+  const [a, b] = hands;
+  if (a.length < 21 || b.length < 21) return false;
+
+  const palmScale = (distance(a[0], a[9]) + distance(b[0], b[9])) / 2;
+  if (palmScale < 0.03) return false;
+
+  const indexTipsClose = distance(a[8], b[8]) < palmScale * 0.75;
+  const thumbTipsClose = distance(a[4], b[4]) < palmScale * 0.75;
+  const wristsApart = distance(a[0], b[0]) > palmScale * 1.35;
+  const indexAboveThumbs = (a[8].y + b[8].y) / 2 < (a[4].y + b[4].y) / 2;
+  const handsFaceEachOther = distance(a[5], b[5]) < distance(a[17], b[17]);
+
+  return indexTipsClose && thumbTipsClose && wristsApart && indexAboveThumbs && handsFaceEachOther;
 }
 
 function distance(a: NormalizedLandmark, b: NormalizedLandmark): number {
