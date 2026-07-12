@@ -1,0 +1,32 @@
+.dance-app .camera-wrap video,
+.dance-app .camera-wrap canvas { transform: scaleX(-1); }
+
+.dance-main { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr); gap: 1.25rem; align-items: start; margin-top: 1.25rem; }
+.dance-header-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+.dance-meta { margin-top: .75rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.dance-meta span { background: #eef3f7; padding: .7rem .8rem; border-radius: 12px; font-weight: 700; }
+.dance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.dance-card { display: flex; flex-direction: column; align-items: stretch; text-align: left; gap: .35rem; padding: .8rem; border-radius: 18px; background: #f5f4f1; color: #20303c; }
+.dance-card.active { outline: 4px solid #D97A4A; background: #fff7f2; }
+.dance-card span { display: inline-flex; align-self: flex-start; margin-top: .2rem; padding: .35rem .65rem; border-radius: 999px; background: #DDF0D8; color: #275427; font-size: .86rem; font-weight: 800; }
+.dance-card small { color: #617480; }
+.dance-figure, .dance-target-svg { width: 100%; max-width: 220px; margin-inline: auto; }
+.dance-figure svg, .dance-target-svg svg { display: block; width: 100%; height: auto; }
+.dance-play-top { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.dance-round-badge { min-width: 96px; text-align: center; padding: .6rem .9rem; border-radius: 999px; background: #243746; color: white; font-weight: 800; }
+.dance-target-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 1rem; align-items: center; }
+.dance-target-card { background: #FBF0EB; border: 3px solid #D97A4A; border-radius: 24px; padding: 1rem; text-align: center; }
+.dance-target-card strong { display: block; margin-top: .5rem; font-size: 1.1rem; }
+.dance-progress-wrap { display: grid; gap: .45rem; }
+.dance-progress { height: 20px; border-radius: 999px; background: #dce4e8; overflow: hidden; }
+.dance-progress > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7DBB6F, #D97A4A); transition: width .08s linear; }
+.dance-result-panel { display: grid; justify-items: center; text-align: center; }
+.dance-result-score { font-size: clamp(4rem, 16vw, 8rem); font-weight: 900; line-height: 1; color: #9E4E22; }
+
+@media (max-width: 900px) {
+  .dance-main { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .dance-grid, .dance-target-wrap, .dance-meta { grid-template-columns: 1fr; }
+}
