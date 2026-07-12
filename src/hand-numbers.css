@@ -70,6 +70,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.number-display strong.gesture-symbol {
+  font-size: clamp(7rem, 20vw, 15rem);
+  line-height: 1;
+}
+
 .hand-status {
   display: inline-flex;
   align-items: center;
@@ -89,6 +94,7 @@
 @media (max-width: 850px) {
   .number-main { grid-template-columns: minmax(0, 1fr) minmax(220px, .55fr); }
   .number-display strong { font-size: clamp(8rem, 24vw, 15rem); }
+  .number-display strong.gesture-symbol { font-size: clamp(6rem, 18vw, 11rem); }
 }
 
 @media (max-width: 680px) {
@@ -98,4 +104,5 @@
   .number-main { grid-template-columns: 1fr; }
   .number-display { min-height: 280px; }
   .number-display strong { font-size: clamp(9rem, 48vw, 15rem); }
+  .number-display strong.gesture-symbol { font-size: clamp(7rem, 35vw, 11rem); }
 }
