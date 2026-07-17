@@ -1,0 +1,28 @@
+.cad-main { display: grid; grid-template-columns: minmax(280px, 390px) minmax(0, 1fr); gap: 1.25rem; align-items: stretch; margin-top: 1.25rem; }
+.cad-camera .camera-wrap video, .cad-camera .camera-wrap canvas { transform: scaleX(-1); }
+.cad-readout { display: grid; grid-template-columns: 1fr auto; gap: .7rem; align-items: center; margin-top: .75rem; }
+.cad-readout span, .cad-readout strong { padding: .7rem .85rem; border-radius: 12px; background: #eef3f7; }
+.cad-readout span.active { background: #ddefd8; color: #285226; }
+.cad-stage-panel { min-height: 650px; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 1rem; }
+.cad-stage { position: relative; min-height: 540px; overflow: hidden; border-radius: 22px; background: radial-gradient(circle at 50% 35%, #526a7b 0, #263947 48%, #17242d 100%); perspective: 1100px; }
+.cad-grid-floor { position: absolute; left: -20%; right: -20%; bottom: -38%; height: 68%; background-image: linear-gradient(#9cb0bd32 1px, transparent 1px), linear-gradient(90deg, #9cb0bd32 1px, transparent 1px); background-size: 42px 42px; transform: rotateX(66deg); transform-origin: center top; }
+.cad-assembly { --rotate-x: -18deg; --rotate-y: 28deg; --explode: 0; position: absolute; left: 50%; top: 50%; width: 250px; height: 250px; transform-style: preserve-3d; transform: translate(-50%, -50%) rotateX(var(--rotate-x)) rotateY(var(--rotate-y)); transition: transform .08s linear; }
+.cad-part { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; box-shadow: inset 0 0 0 2px #ffffff26, 0 16px 26px #0005; }
+.cad-shaft { width: 42px; height: 42px; margin: -21px; border-radius: 50%; background: linear-gradient(90deg, #8396a3, #d8e1e6 45%, #687c8a); transform: translateZ(0) scaleY(4.8); }
+.cad-backplate, .cad-frontplate { width: 150px; height: 150px; margin: -75px; border-radius: 28px; background: linear-gradient(135deg, #506b7b, #2d4554); border: 7px solid #91a6b2; }
+.cad-backplate { transform: translateZ(calc(-82px - var(--explode) * 140px)); }
+.cad-frontplate { transform: translateZ(calc(82px + var(--explode) * 140px)); }
+.cad-bearing { width: 116px; height: 116px; margin: -58px; border-radius: 50%; background: radial-gradient(circle, transparent 0 30%, #d8e1e6 31% 48%, #617582 49% 66%, #c5d0d7 67%); }
+.cad-bearing i, .cad-gear i { position: absolute; inset: 37%; border-radius: 50%; background: #22343f; box-shadow: inset 0 0 0 5px #7f919d; }
+.cad-bearing-back { transform: translateZ(calc(-42px - var(--explode) * 80px)); }
+.cad-bearing-front { transform: translateZ(calc(42px + var(--explode) * 80px)); }
+.cad-gear { width: 136px; height: 136px; margin: -68px; border-radius: 28%; background: repeating-conic-gradient(#d97a4a 0 7deg, #9e4e22 7deg 12deg); clip-path: polygon(44% 0,56% 0,60% 11%,70% 14%,79% 7%,88% 16%,83% 26%,89% 36%,100% 40%,100% 54%,89% 58%,84% 68%,91% 78%,81% 88%,71% 82%,60% 88%,56% 100%,44% 100%,40% 89%,29% 84%,19% 91%,10% 81%,16% 70%,11% 59%,0 55%,0 43%,11% 39%,16% 28%,9% 19%,19% 9%,30% 16%,40% 11%); transform: translateZ(0); }
+.cad-cap { width: 70px; height: 70px; margin: -35px; border-radius: 18px; background: linear-gradient(135deg, #7dbb6f, #3f7340); transform: translateZ(calc(120px + var(--explode) * 210px)); }
+.cad-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+.cad-legend div { display: grid; grid-template-columns: 14px 1fr; gap: .2rem .55rem; align-items: center; padding: .8rem; border-radius: 14px; background: #eef3f7; }
+.cad-legend small { grid-column: 2; color: #617480; }
+.cad-dot { width: 12px; height: 12px; border-radius: 50%; background: #d97a4a; }
+.cad-dot.rotate { background: #3e5668; }
+.cad-dot.explode { background: #7dbb6f; }
+@media (max-width: 980px) { .cad-main { grid-template-columns: 300px minmax(0, 1fr); } .cad-stage-panel { min-height: 560px; } .cad-stage { min-height: 460px; } }
+@media (max-width: 760px) { .cad-main { grid-template-columns: 1fr; } .cad-stage { min-height: 420px; } .cad-legend { grid-template-columns: 1fr; } .cad-readout { grid-template-columns: 1fr; } }
